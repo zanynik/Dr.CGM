@@ -1,0 +1,15 @@
+.venv/
+__pycache__/
+.pytest_cache/
+*.py[cod]
+inputs/
+runs/
+cases/
+demo-input/
+reference-relicapgrid/
+relicapgrid/
+wheels/
+*.sqlite
+*.sqlite-shm
+*.sqlite-wal
+*.zip

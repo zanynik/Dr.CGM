@@ -1,0 +1,61 @@
+{
+  "igms": [
+    {
+      "name": "TSO_A",
+      "files": [
+        "inputs/TSO_A_IGM.zip"
+      ]
+    },
+    {
+      "name": "TSO_B",
+      "files": [
+        "inputs/TSO_B_IGM.zip"
+      ]
+    }
+  ],
+  "boundaries": [
+    "inputs/BOUNDARY.zip"
+  ],
+  "required_profiles": [
+    "EQ",
+    "SSH",
+    "TP"
+  ],
+  "max_input_bytes": 4294967296,
+  "max_examples_per_rule": 200,
+  "engine": {
+    "timeout_seconds": 300,
+    "experiments": true,
+    "experiments_on_success": false,
+    "expected_internal_boundary_keys": [],
+    "boundary_p_tolerance_mw": 5.0,
+    "near_zero_impedance_pu": 1e-07,
+    "validation_threshold": 0.1,
+    "import_parameters": {},
+    "loadflow_parameters": {
+      "voltage_init_mode": "UNIFORM_VALUES",
+      "component_mode": "ALL_CONNECTED",
+      "use_reactive_limits": true,
+      "distributed_slack": true,
+      "read_slack_bus": false,
+      "write_slack_bus": false,
+      "transformer_voltage_control_on": true,
+      "shunt_compensator_voltage_control_on": true,
+      "phase_shifter_regulation_on": true,
+      "provider_parameters": {
+        "maxNewtonRaphsonIterations": "30",
+        "maxOuterLoopIterations": "30",
+        "reportedFeatures": "NEWTON_RAPHSON_LOAD_FLOW"
+      }
+    },
+    "control_experiments": [],
+    "area_net_position_targets_mw": {},
+    "net_position_tolerance_mw": 5.0
+  },
+  "common_data": [],
+  "localization": {
+    "enabled": false,
+    "max_runs": 4
+  },
+  "alignment_observations": []
+}
