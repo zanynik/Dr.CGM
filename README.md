@@ -6,6 +6,32 @@ Dr.CGM is an offline Python tool for RCC engineers investigating CGMES data qual
 
 This is an engineering diagnostic tool. It does not reproduce an RCC's complete production alignment pipeline or certify CGMES/NCP conformance. A converged experiment is evidence of sensitivity, not proof of a defective component or approval to change operational settings. Source files are never repaired or overwritten.
 
+## Public development and private acceptance
+
+Use `make_demo.py` and public reference models to develop and test the code outside the company environment. Move a reviewed, versioned checkout and its pinned dependencies into the approved company environment. Run real IGMs/CGMs and keep **inputs, manifests, reports, worker logs, SQLite indexes, and benchmark labels** there. Dr.CGM itself makes no LLM or network calls; check your Python/package environment and company rules for telemetry before running it. An online coding session cannot verify parity with a modified internal PowSyBl pipeline.
+
+For each historical case, record the operator's independently established finding and run Dr.CGM locally. For example, create a private `labels.json` beside the report folders:
+
+```json
+{
+  "cases": [
+    {"id": "case-001", "report": "runs/case-001", "expected": [
+      {"scope": "CGM", "code": "AC_NOT_CONVERGED"}
+    ]}
+  ]
+}
+```
+
+```powershell
+.\.venv\Scripts\python.exe benchmark.py --labels labels.json --out runs\benchmark-001
+```
+
+`benchmark.json` and `benchmark.csv` count detected, missed and inconclusive **expected rule codes** using uncapped `finding_counts`. Exit codes are 0 for all detected, 1 if any expected rule is missed, and 2 if only inconclusive checks remain. A failed or incomplete replay is inconclusive for absent findings. Labels should refer to observed rules; a matching rule is not proof the tool identified the true root cause. Record false leads and operator notes separately; this benchmark does not claim precision/recall or automatically score explanations. Both reports and labels remain private.
+
+When a real case exposes a gap, construct a small synthetic network reproducing the condition, then add its test and fix to the public development checkout. Internal exception text, file names, topology, IDs, screenshots, logs and numeric values may disclose company data. Only share a description after your organization's review of that **specific** material; changing identifiers or normalizing values alone does not make it safe. Re-run the historical benchmark inside after bringing in a reviewed patch.
+
+Each supported finding in `report.json`, `findings.csv` and the report's expanded evidence includes its method, implementation entry point and interpretation limit. Start with the report result, follow the named function and its PowSyBl calls, then inspect assumptions and a concrete test case. The `certainty` field distinguishes an observed check from a hypothesis; it is not a probability. The rule guide covers selected high-impact findings; other findings retain their existing action and evidence.
+
 ## How the diagnosis is organized
 
 ```mermaid

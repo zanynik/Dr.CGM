@@ -2,6 +2,7 @@ import html
 from collections import Counter
 from pathlib import Path
 from .common import write_csv, write_json
+from .rulebook import explain
 
 
 def h(value): return html.escape(str(value))
@@ -15,13 +16,17 @@ def table(records, columns):
 
 
 def render(out, data):
+    for finding in data["findings"]:
+        rule = explain(finding["code"])
+        if rule:
+            finding["methodology"] = rule
     write_json(out / "report.json", data)
     priorities = {"XML_UNREADABLE":0,"DEPENDENCY_MISSING":1,"DEPENDENCY_CYCLE":1,"PROFILE_MISSING":2,
                   "MODEL_ID_REUSED":3,"SCENARIO_MISMATCH":3,"MIXED_CIM_VERSIONS":3,
                   "REFERENCE_MISSING":4,"VALUE_CONFLICT":4,"NONPOSITIVE_RATING":5,
                   "NONFINITE_OR_INVALID_NUMBER":5,"ENGINE_FAILURE":20,"AC_NOT_CONVERGED":30}
     findings = sorted(data["findings"], key=lambda x: ({"ERROR":0,"WARN":1,"INFO":2}.get(x["severity"],3), priorities.get(x["code"],15), x["code"], x["scope"]))
-    fields = ["severity", "code", "scope", "certainty", "message", "action", "ids", "evidence", "source_trace"]
+    fields = ["severity", "code", "scope", "certainty", "message", "action", "ids", "evidence", "source_trace", "methodology"]
     write_csv(out / "findings.csv", findings, fields)
     summary = Counter()
     for item in data["finding_counts"]: summary[item["severity"]] += item["count"]
@@ -38,7 +43,8 @@ def render(out, data):
     rows = []
     import json
     for item in findings:
-        ev = json.dumps({"evidence":item.get("evidence",{}),"source_trace":item.get("source_trace",[])}, indent=2, ensure_ascii=False)
+        ev = json.dumps({"evidence":item.get("evidence",{}),"source_trace":item.get("source_trace",[]),
+                         "methodology":item.get("methodology", "See source implementation and action for this rule.")}, indent=2, ensure_ascii=False)
         rows.append(f'''<article class="finding {h(item['severity'].lower())}" data-severity="{h(item['severity'])}">
         <div class="meta"><span class="badge">{h(item['severity'])}</span> {h(item['scope'])} · {h(item['code'])} · {h(item['certainty'])}</div>
         <h3>{h(item['message'])}</h3><p><strong>Next check:</strong> {h(item['action'])}</p>
