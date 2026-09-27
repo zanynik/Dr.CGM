@@ -11,7 +11,7 @@ python -m pip install -r requirements-dev.txt
 python -m pytest -q
 ```
 
-Local result: **27 passed in 36.66 seconds**. The v0.2 suite exercises:
+Original v0.2 verification: **27 passed in 36.66 seconds**. The current suite also checks that the private benchmark reads uncapped finding counters, treats incomplete replay as inconclusive, and includes rule methodology in saved reports. The v0.2 suite exercises:
 
 - Actual CGMES 3.0 export/import, converged AC, the 14-case experiment plan and independent DC mode, with source checksums unchanged.
 - Actual stressed-network non-convergence, native final residual locations and source-linked adjacent equipment.
