@@ -52,6 +52,54 @@ flowchart TD
 
 A combined replay imports all selected CGMES profiles together; it is not a blind merge of independently converted networks. `igms` mode replays each delivery and then their union. `cgm` mode imports one already assembled package, such as RCC TP/SV plus updated SSH and original EQ, without pretending to recover the original IGMs.
 
+## Recommended acceptance path: public test first, confidential case second
+
+If your goal is to clone Dr.CGM onto an approved company Windows machine and test a confidential IGM/CGM, use this order:
+
+1. **Clone the repository and create the Python 3.12 virtual environment** using the commands below.
+2. **Verify the runtime**: confirm the PyPowSyBl version and that `OpenLoadFlow` is available.
+3. **Run the generated healthy demo** and open `report.html`. Do not continue to confidential data until this succeeds.
+4. **Run the full pytest regression suite**. This exercises real CGMES export/import and OpenLoadFlow, not only mocked code.
+5. **Create a private case folder outside the Git checkout**, for example `C:\\RCC\\case-001`, and put the operational files there.
+6. **Create a small manifest** pointing at that folder. Start with one known historical case whose operational diagnosis is already understood.
+7. **Run Dr.CGM to a new private output directory**, for example `C:\\RCC\\results\\case-001-20260927`.
+8. **Read the report in this order**: package/source errors → import report → topology/components → baseline AC result → sensitivity experiments → source attribution.
+9. If the result differs from the known operational diagnosis, **do not move confidential files or raw logs outside the approved environment**. Reduce the issue to a synthetic/public reproducer and fix/test that reproducer in the public development checkout.
+10. Only after several known cases behave sensibly should you use Dr.CGM on an unknown production failure.
+
+A first private run should therefore look like:
+
+```powershell
+# From the cloned Dr.CGM repository
+.\\.venv\\Scripts\\python.exe -c "import pypowsybl as p; print('PyPowSyBl', p.__version__); print('LF providers', p.loadflow.get_provider_names())"
+.\\.venv\\Scripts\\python.exe make_demo.py --out demo-input
+.\\.venv\\Scripts\\python.exe diagnose.py --manifest demo-input\\healthy.json --out runs\\healthy
+.\\.venv\\Scripts\\python.exe -m pytest -q
+
+# Then your approved local case. Keep the data OUTSIDE the Git repository.
+New-Item -ItemType Directory -Force C:\\RCC\\results | Out-Null
+.\\.venv\\Scripts\\python.exe diagnose.py `
+  --manifest C:\\RCC\\case-001\\case.json `
+  --out C:\\RCC\\results\\case-001-20260927
+
+Start-Process C:\\RCC\\results\\case-001-20260927\\report.html
+```
+
+Before comparing Dr.CGM with the production RCC process, record the production **CGMES stage/snapshot, boundary set, PowSyBl/OpenLoadFlow versions, import parameters, balancing/slack behavior, topology processing and control settings**. A difference in any of these can change convergence and must not automatically be interpreted as a data-quality defect.
+
+### PowSyBl 7.4.0-RC1 compatibility status
+
+PowSyBl Core **7.4.0-RC1** was published on 25 September 2026 and includes changes directly relevant to Dr.CGM, including deterministic CGM-subnetwork import order, multithreaded CGM-with-subnetworks import, CGMES fixes and IIDM 1.18 changes.
+
+Dr.CGM is a **Python** application, so the executable engine it actually tests is the one bundled inside the installed **PyPowSyBl wheel**. At the time of this repository update, the latest published PyPowSyBl wheel is still **1.16.1**; upstream has not published a Python wheel that can be pinned to Core 7.4.0-RC1. Therefore:
+
+- the normal regression suite remains pinned to `pypowsybl==1.16.1`;
+- Dr.CGM does **not** claim runtime validation against Core 7.4.0-RC1 yet;
+- the 7.4 migration/release notes were reviewed for areas relevant to Dr.CGM;
+- when upstream publishes a PyPowSyBl release containing Core 7.4, that wheel should be tested on this same regression suite **before** changing the production pin.
+
+The most important 7.4 regression targets for Dr.CGM are CGMES import determinism, subnetwork import, generator/reactive-limit validation, phase-tap behavior, HVDC validation and any change in network-copy ordering. See [TESTING.md](TESTING.md) for the compatibility record.
+
 ## Windows setup from scratch
 
 Use **Windows x64 and CPython 3.12 x64** for the documented setup. Native PyPowSyBl wheels are required. This project pins PyPowSyBl 1.16.1. You do not need to install Java, Maven or a separate PowSyBl distribution when using its published wheel.
